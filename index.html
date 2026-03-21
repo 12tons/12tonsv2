@@ -1,0 +1,226 @@
+Perfeito — então vamos fazer as **3 melhorias juntas**, mas mantendo tudo simples e controlado.
+
+👉 O que vou te entregar agora:
+
+1. ✅ Botões com destaque (modo ativo e progressão ativa)
+2. ✅ Possibilidade de **selecionar várias progressões ao mesmo tempo**
+3. ✅ Sorteio escolhe **uma das progressões selecionadas**
+
+---
+
+## ⚠️ Transparência rápida
+
+* Se nenhuma progressão estiver selecionada → não sorteia
+* Se várias estiverem → escolhe uma aleatoriamente
+* Não alterei sua lógica harmônica (só interface + seleção)
+
+---
+
+## ✅ Código completo (substituir tudo)
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sorteador</title>
+
+<style>
+body { font-family: sans-serif; text-align: center; margin-top: 40px; }
+
+button {
+  margin: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.ativo {
+  background-color: black;
+  color: white;
+}
+
+#resultado { font-size: 30px; margin-top: 20px; }
+#ciclo { margin-top: 15px; }
+#progressao { margin-top: 20px; font-size: 22px; }
+</style>
+</head>
+
+<body>
+
+<h1>Sorteador</h1>
+
+<div>
+<button id="btnMaior" onclick="selecionarModo('maior')">Maiores</button>
+<button id="btnMenor" onclick="selecionarModo('menor')">Menores</button>
+</div>
+
+<div>
+<button onclick="toggleProg('251M', this)">ii–V–I (M)</button>
+<button onclick="toggleProg('251m', this)">ii–V–I (m)</button>
+<button onclick="toggleProg('subVI', this)">subII–subV/VI</button>
+<button onclick="toggleProg('subI', this)">subII–subV/I</button>
+<button onclick="toggleProg('171', this)">I–VII–I</button>
+</div>
+
+<button onclick="sortear()">Sortear</button>
+
+<div id="resultado">—</div>
+<div id="ciclo"></div>
+<div id="progressao"></div>
+
+<script>
+
+let tonalidades = [
+"C","G","D","A","E","B",
+"F#","Db","Ab","Eb","Bb","F"
+];
+
+let embaralhadas = [];
+let tipoAtual = "maior";
+let progressõesAtivas = ["251M"];
+
+// mapas
+let notasSharp = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+let notasFlat  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+
+function usarBemol(t){
+  return ["F","Bb","Eb","Ab","Db","Gb"].includes(t);
+}
+
+function nota(base, intervalo){
+  let idx = notasSharp.indexOf(base);
+  if(idx===-1) idx = notasFlat.indexOf(base);
+  let nova = (idx + intervalo + 12) % 12;
+  return usarBemol(base) ? notasFlat[nova] : notasSharp[nova];
+}
+
+// acordes
+function tonica(){
+  return tipoAtual==="maior" ? "Δ" : "mΔ";
+}
+
+function dominante(){
+  return tipoAtual==="maior" ? "7" : "7alt";
+}
+
+function acorde(n,t){
+  if(t==="Δ") return n+"Δ";
+  if(t==="m") return n+"m7";
+  if(t==="ø") return n+"m7♭5";
+  if(t==="7") return n+"7";
+  if(t==="7alt") return n+"7alt";
+  if(t==="mΔ") return n+"m(Δ)";
+}
+
+// progressões
+function gerarProgressao(t, tipo){
+
+  if(tipo==="251M"){
+    return [
+      acorde(nota(t,2),"m"),
+      acorde(nota(t,7),"7"),
+      acorde(t,"Δ")
+    ];
+  }
+
+  if(tipo==="251m"){
+    return [
+      acorde(nota(t,2),"ø"),
+      acorde(nota(t,7),"7alt"),
+      acorde(t,"mΔ")
+    ];
+  }
+
+  if(tipo==="subI"){
+    let subII = nota(t,1);
+    let subIIm = nota(subII,-2);
+    return [
+      acorde(subIIm,"m"),
+      acorde(subII,"7"),
+      acorde(t, tonica())
+    ];
+  }
+
+  if(tipo==="subVI"){
+    let VI = nota(t,9);
+    let subV = nota(VI,1);
+    return [
+      acorde(subV, dominante()),
+      acorde(VI,"m"),
+      acorde(t, tonica())
+    ];
+  }
+
+  if(tipo==="171"){
+    return [
+      acorde(t, tonica()),
+      acorde(nota(t,11), dominante()),
+      acorde(t, tonica())
+    ];
+  }
+}
+
+// ciclo
+function gerarCiclo(t){
+  let ciclo=[];
+  let atual=t;
+
+  for(let i=0;i<12;i++){
+    ciclo.push(atual);
+    atual = nota(atual,7);
+  }
+
+  return ciclo;
+}
+
+// UI
+function selecionarModo(tipo){
+  tipoAtual = tipo;
+
+  document.getElementById("btnMaior").classList.remove("ativo");
+  document.getElementById("btnMenor").classList.remove("ativo");
+
+  if(tipo==="maior") document.getElementById("btnMaior").classList.add("ativo");
+  else document.getElementById("btnMenor").classList.add("ativo");
+
+  iniciar();
+}
+
+function toggleProg(nome, btn){
+  if(progressõesAtivas.includes(nome)){
+    progressõesAtivas = progressõesAtivas.filter(p => p !== nome);
+    btn.classList.remove("ativo");
+  } else {
+    progressõesAtivas.push(nome);
+    btn.classList.add("ativo");
+  }
+}
+
+// controle
+function embaralhar(a){
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+}
+
+function iniciar(){
+  embaralhadas=[...tonalidades];
+  embaralhar(embaralhadas);
+}
+
+function sortear(){
+
+  if(progressõesAtivas.length === 0){
+    document.getElementById("progressao").innerText = "Selecione uma progressão";
+    return;
+  }
+
+  if(embaralhadas.length===0){
+    document.getElementById("resultado").innerText="Fim!";
+    return;
+  }
+
+  let t=embaralhadas.pop();
+ 
+```
