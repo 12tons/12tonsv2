@@ -45,9 +45,17 @@ button:hover { background: #eaeaea; }
   margin-top: 10px;
 }
 
+/* 🔥 TAMANHO DINÂMICO */
+.ciclo-triade {
+  font-size: 32px;
+}
+
+.ciclo-tetrade {
+  font-size: 24px;
+}
+
 #ciclo {
   margin-top: 10px;
-  font-size: 32px;
   line-height: 1.4;
   text-align: left;
   max-width: 900px;
@@ -60,7 +68,6 @@ button:hover { background: #eaeaea; }
 
 <h1>Sorteador de Tonalidades</h1>
 
-<!-- NOVO -->
 <div>
   <button id="btn-triade" onclick="setAcorde('triade')">Tríades</button>
   <button id="btn-tetrade" onclick="setAcorde('tetrade')">Tétrades</button>
@@ -94,110 +101,21 @@ const letras=["C","D","E","F","G","A","B"];
 const semitons={"C":0,"D":2,"E":4,"F":5,"G":7,"A":9,"B":11};
 
 let tipoAcorde="triade";
+let listaAtual=[],embaralhadas=[],modo="quintas",menorModo="natural";
+
+const ciclo=["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"];
+
+function limparAtivos(ids){
+  ids.forEach(id=>document.getElementById(id).classList.remove("ativo"));
+}
 
 function setAcorde(tipo){
   limparAtivos(["btn-triade","btn-tetrade"]);
   tipoAcorde=tipo;
   document.getElementById("btn-"+tipo).classList.add("ativo");
-}
 
-function nota(letra, alvo){
-  let base=semitons[letra];
-  let diff=(alvo-base+12)%12;
-
-  if(diff===0) return letra;
-  if(diff===1) return letra+"#";
-  if(diff===11) return letra+"b";
-  return letra;
-}
-
-function escala(tonica,intervalos){
-  let base=tonica.replace("m","");
-  let l=base[0];
-  let idxL=letras.indexOf(l);
-
-  let baseSemi=semitons[l];
-  if(base.includes("#")) baseSemi++;
-  if(base.includes("b")) baseSemi--;
-
-  let esc=[];
-
-  for(let i=0;i<7;i++){
-    let letra=letras[(idxL+i)%7];
-    let alvo=(baseSemi+intervalos[i])%12;
-    esc.push(nota(letra,alvo));
-  }
-
-  return esc;
-}
-
-function campo(tonica){
-
-  let maior=[0,2,4,5,7,9,11];
-  let menorNat=[0,2,3,5,7,8,10];
-  let menorHar=[0,2,3,5,7,8,11];
-
-  if(!tonica.includes("m")){
-    let e=escala(tonica,maior);
-
-    if(tipoAcorde==="triade"){
-      return [e[0],e[1]+"m",e[2]+"m",e[3],e[4],e[5]+"m",e[6]+"°"];
-    }
-
-    return [
-      e[0]+"7M",
-      e[1]+"m7",
-      e[2]+"m7",
-      e[3]+"7M",
-      e[4]+"7",
-      e[5]+"m7",
-      e[6]+"ø"
-    ];
-  }
-
-  if(menorModo==="natural"){
-    let e=escala(tonica,menorNat);
-
-    if(tipoAcorde==="triade"){
-      return [e[0]+"m",e[1]+"°",e[2],e[3]+"m",e[4]+"m",e[5],e[6]];
-    }
-
-    return [
-      e[0]+"m7",
-      e[1]+"ø",
-      e[2]+"7M",
-      e[3]+"m7",
-      e[4]+"m7",
-      e[5]+"7M",
-      e[6]+"7"
-    ];
-  }
-
-  let e=escala(tonica,menorHar);
-
-  if(tipoAcorde==="triade"){
-    return [e[0]+"m",e[1]+"°",e[2]+"(#5)",e[3]+"m",e[4],e[5],e[6]+"°"];
-  }
-
-  return [
-    e[0]+"m(7M)",
-    e[1]+"ø",
-    e[2]+"7M(#5)",
-    e[3]+"m7",
-    e[4]+"7",
-    e[5]+"7M",
-    e[6]+"°"
-  ];
-}
-
-/* resto igual */
-
-const ciclo=["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"];
-
-let listaAtual=[],embaralhadas=[],modo="quintas",menorModo="natural";
-
-function limparAtivos(ids){
-  ids.forEach(id=>document.getElementById(id).classList.remove("ativo"));
+  document.getElementById("ciclo").className =
+    tipo==="triade" ? "ciclo-triade" : "ciclo-tetrade";
 }
 
 function selecionar(tipo){
@@ -244,6 +162,71 @@ function embaralhar(a){
   }
 }
 
+function nota(letra, alvo){
+  let base=semitons[letra];
+  let diff=(alvo-base+12)%12;
+
+  if(diff===0) return letra;
+  if(diff===1) return letra+"#";
+  if(diff===11) return letra+"b";
+  return letra;
+}
+
+function escala(tonica,intervalos){
+  let base=tonica.replace("m","");
+  let l=base[0];
+  let idxL=letras.indexOf(l);
+
+  let baseSemi=semitons[l];
+  if(base.includes("#")) baseSemi++;
+  if(base.includes("b")) baseSemi--;
+
+  let esc=[];
+
+  for(let i=0;i<7;i++){
+    let letra=letras[(idxL+i)%7];
+    let alvo=(baseSemi+intervalos[i])%12;
+    esc.push(nota(letra,alvo));
+  }
+
+  return esc;
+}
+
+function campo(tonica){
+
+  let maior=[0,2,4,5,7,9,11];
+  let menorNat=[0,2,3,5,7,8,10];
+  let menorHar=[0,2,3,5,7,8,11];
+
+  if(!tonica.includes("m")){
+    let e=escala(tonica,maior);
+
+    if(tipoAcorde==="triade"){
+      return [e[0],e[1]+"m",e[2]+"m",e[3],e[4],e[5]+"m",e[6]+"°"];
+    }
+
+    return [e[0]+"7M",e[1]+"m7",e[2]+"m7",e[3]+"7M",e[4]+"7",e[5]+"m7",e[6]+"ø"];
+  }
+
+  if(menorModo==="natural"){
+    let e=escala(tonica,menorNat);
+
+    if(tipoAcorde==="triade"){
+      return [e[0]+"m",e[1]+"°",e[2],e[3]+"m",e[4]+"m",e[5],e[6]];
+    }
+
+    return [e[0]+"m7",e[1]+"ø",e[2]+"7M",e[3]+"m7",e[4]+"m7",e[5]+"7M",e[6]+"7"];
+  }
+
+  let e=escala(tonica,menorHar);
+
+  if(tipoAcorde==="triade"){
+    return [e[0]+"m",e[1]+"°",e[2]+"(#5)",e[3]+"m",e[4],e[5],e[6]+"°"];
+  }
+
+  return [e[0]+"m(7M)",e[1]+"ø",e[2]+"7M(#5)",e[3]+"m7",e[4]+"7",e[5]+"7M",e[6]+"°"];
+}
+
 function gerarCiclo(t){
 
   if(modo.includes("cromatico")){
@@ -288,7 +271,7 @@ function sortear(){
   let html="";
 
   ciclo.forEach(ton=>{
-    html+=`<div style="margin-bottom:12px;"><b>${ton}</b> → ${campo(ton).join(" ")}</div>`;
+    html+=`<div style="margin-bottom:10px;"><b>${ton}</b> → ${campo(ton).join(" ")}</div>`;
   });
 
   document.getElementById("ciclo").innerHTML=html;
