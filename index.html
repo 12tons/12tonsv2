@@ -12,8 +12,6 @@ body {
   background-color: #f4f6f8;
 }
 
-h1 { font-size: 24px; }
-
 button {
   margin: 4px;
   padding: 8px 12px;
@@ -62,6 +60,12 @@ button:hover { background: #eaeaea; }
 
 <h1>Sorteador de Tonalidades</h1>
 
+<!-- NOVO -->
+<div>
+  <button id="btn-triade" onclick="setAcorde('triade')">Tríades</button>
+  <button id="btn-tetrade" onclick="setAcorde('tetrade')">Tétrades</button>
+</div>
+
 <div>
   <button id="btn-maior" onclick="selecionar('maior')">Maiores</button>
   <button id="btn-menor" onclick="selecionar('menor')">Menores</button>
@@ -86,101 +90,117 @@ button:hover { background: #eaeaea; }
 
 <script>
 
-const letras = ["C","D","E","F","G","A","B"];
-const semitons = {"C":0,"D":2,"E":4,"F":5,"G":7,"A":9,"B":11};
+const letras=["C","D","E","F","G","A","B"];
+const semitons={"C":0,"D":2,"E":4,"F":5,"G":7,"A":9,"B":11};
 
-function notaComAlteracao(letra, alvo){
-  let base = semitons[letra];
-  let diff = (alvo - base + 12) % 12;
+let tipoAcorde="triade";
 
-  if(diff === 0) return letra;
-  if(diff === 1) return letra + "#";
-  if(diff === 11) return letra + "b";
+function setAcorde(tipo){
+  limparAtivos(["btn-triade","btn-tetrade"]);
+  tipoAcorde=tipo;
+  document.getElementById("btn-"+tipo).classList.add("ativo");
+}
 
+function nota(letra, alvo){
+  let base=semitons[letra];
+  let diff=(alvo-base+12)%12;
+
+  if(diff===0) return letra;
+  if(diff===1) return letra+"#";
+  if(diff===11) return letra+"b";
   return letra;
 }
 
-function construirEscala(tonica, tipo){
+function escala(tonica,intervalos){
+  let base=tonica.replace("m","");
+  let l=base[0];
+  let idxL=letras.indexOf(l);
 
-  let base = tonica.replace("m","");
-  let letraBase = base[0];
-  let idxLetra = letras.indexOf(letraBase);
+  let baseSemi=semitons[l];
+  if(base.includes("#")) baseSemi++;
+  if(base.includes("b")) baseSemi--;
 
-  let intervalos;
-
-  if(tipo === "maior") intervalos = [0,2,4,5,7,9,11];
-  if(tipo === "menorNat") intervalos = [0,2,3,5,7,8,10];
-  if(tipo === "menorHar") intervalos = [0,2,3,5,7,8,11];
-
-  let baseSemitom = semitons[letraBase];
-  if(base.includes("#")) baseSemitom++;
-  if(base.includes("b")) baseSemitom--;
-
-  let escala = [];
+  let esc=[];
 
   for(let i=0;i<7;i++){
-    let letra = letras[(idxLetra+i)%7];
-    let alvo = (baseSemitom + intervalos[i]) % 12;
-    escala.push(notaComAlteracao(letra, alvo));
+    let letra=letras[(idxL+i)%7];
+    let alvo=(baseSemi+intervalos[i])%12;
+    esc.push(nota(letra,alvo));
   }
 
-  return escala;
+  return esc;
 }
 
 function campo(tonica){
 
+  let maior=[0,2,4,5,7,9,11];
+  let menorNat=[0,2,3,5,7,8,10];
+  let menorHar=[0,2,3,5,7,8,11];
+
   if(!tonica.includes("m")){
-    let esc = construirEscala(tonica,"maior");
+    let e=escala(tonica,maior);
+
+    if(tipoAcorde==="triade"){
+      return [e[0],e[1]+"m",e[2]+"m",e[3],e[4],e[5]+"m",e[6]+"°"];
+    }
+
     return [
-      esc[0],
-      esc[1]+"m",
-      esc[2]+"m",
-      esc[3],
-      esc[4]+"7",
-      esc[5]+"m",
-      esc[6]+"°"
+      e[0]+"7M",
+      e[1]+"m7",
+      e[2]+"m7",
+      e[3]+"7M",
+      e[4]+"7",
+      e[5]+"m7",
+      e[6]+"ø"
     ];
   }
 
   if(menorModo==="natural"){
-    let esc = construirEscala(tonica,"menorNat");
+    let e=escala(tonica,menorNat);
+
+    if(tipoAcorde==="triade"){
+      return [e[0]+"m",e[1]+"°",e[2],e[3]+"m",e[4]+"m",e[5],e[6]];
+    }
+
     return [
-      esc[0]+"m",
-      esc[1]+"°",
-      esc[2],
-      esc[3]+"m",
-      esc[4]+"m",
-      esc[5],
-      esc[6]
+      e[0]+"m7",
+      e[1]+"ø",
+      e[2]+"7M",
+      e[3]+"m7",
+      e[4]+"m7",
+      e[5]+"7M",
+      e[6]+"7"
     ];
   }
 
-  let esc = construirEscala(tonica,"menorHar");
+  let e=escala(tonica,menorHar);
+
+  if(tipoAcorde==="triade"){
+    return [e[0]+"m",e[1]+"°",e[2]+"(#5)",e[3]+"m",e[4],e[5],e[6]+"°"];
+  }
 
   return [
-    esc[0]+"m",
-    esc[1]+"°",
-    esc[2]+"(#5)",
-    esc[3]+"m",
-    esc[4]+"7",
-    esc[5],
-    esc[6]+"°"
+    e[0]+"m(7M)",
+    e[1]+"ø",
+    e[2]+"7M(#5)",
+    e[3]+"m7",
+    e[4]+"7",
+    e[5]+"7M",
+    e[6]+"°"
   ];
 }
 
-const ciclo = ["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"];
+/* resto igual */
 
-let listaAtual=[];
-let embaralhadas=[];
-let modo="quintas";
-let menorModo="natural";
+const ciclo=["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"];
+
+let listaAtual=[],embaralhadas=[],modo="quintas",menorModo="natural";
 
 function limparAtivos(ids){
-  ids.forEach(id => document.getElementById(id).classList.remove("ativo"));
+  ids.forEach(id=>document.getElementById(id).classList.remove("ativo"));
 }
 
 function selecionar(tipo){
-
   limparAtivos(["btn-maior","btn-menor"]);
 
   if(tipo==="maior"){
@@ -227,17 +247,18 @@ function embaralhar(a){
 function gerarCiclo(t){
 
   if(modo.includes("cromatico")){
-    const crom = ["C","C#","D","D#","E","F","F#","G","G#","A","Bb","B"];
+    const crom=["C","C#","D","D#","E","F","F#","G","G#","A","Bb","B"];
     let base=t.replace("m","");
     let idx=crom.indexOf(base);
     let out=[];
 
     for(let i=0;i<12;i++){
-      let pos = modo==="cromaticoAsc" ? (idx+i)%12 : (idx-i+12)%12;
+      let pos=modo==="cromaticoAsc"?(idx+i)%12:(idx-i+12)%12;
       let nota=crom[pos];
       if(t.includes("m")) nota+="m";
       out.push(nota);
     }
+
     return out;
   }
 
@@ -245,10 +266,7 @@ function gerarCiclo(t){
   let out=[];
 
   for(let k=0;k<12;k++){
-    let pos = modo==="quartas"
-      ? (i-k+12)%12
-      : (i+k)%12;
-
+    let pos=modo==="quartas"?(i-k+12)%12:(i+k)%12;
     out.push(listaAtual[pos]);
   }
 
@@ -276,6 +294,7 @@ function sortear(){
   document.getElementById("ciclo").innerHTML=html;
 }
 
+setAcorde("triade");
 selecionar("maior");
 setModo("quintas");
 
