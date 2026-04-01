@@ -12,9 +12,7 @@ body {
   background-color: #f4f6f8;
 }
 
-h1 {
-  font-size: 24px;
-}
+h1 { font-size: 24px; }
 
 button {
   margin: 4px;
@@ -26,11 +24,8 @@ button {
   cursor: pointer;
 }
 
-button:hover {
-  background: #eaeaea;
-}
+button:hover { background: #eaeaea; }
 
-/* 🔥 BOTÃO ATIVO */
 .ativo {
   background: #222;
   color: white;
@@ -52,7 +47,6 @@ button:hover {
   margin-top: 10px;
 }
 
-/* fonte grande */
 #ciclo {
   margin-top: 10px;
   font-size: 32px;
@@ -92,24 +86,97 @@ button:hover {
 
 <script>
 
-const notas = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const letras = ["C","D","E","F","G","A","B"];
+const semitons = {"C":0,"D":2,"E":4,"F":5,"G":7,"A":9,"B":11};
 
-const maior = [0,2,4,5,7,9,11];
-const menorNat = [0,2,3,5,7,8,10];
-const menorHar = [0,2,3,5,7,8,11];
+function notaComAlteracao(letra, alvo){
+  let base = semitons[letra];
+  let diff = (alvo - base + 12) % 12;
+
+  if(diff === 0) return letra;
+  if(diff === 1) return letra + "#";
+  if(diff === 11) return letra + "b";
+
+  return letra;
+}
+
+function construirEscala(tonica, tipo){
+
+  let base = tonica.replace("m","");
+  let letraBase = base[0];
+  let idxLetra = letras.indexOf(letraBase);
+
+  let intervalos;
+
+  if(tipo === "maior") intervalos = [0,2,4,5,7,9,11];
+  if(tipo === "menorNat") intervalos = [0,2,3,5,7,8,10];
+  if(tipo === "menorHar") intervalos = [0,2,3,5,7,8,11];
+
+  let baseSemitom = semitons[letraBase];
+  if(base.includes("#")) baseSemitom++;
+  if(base.includes("b")) baseSemitom--;
+
+  let escala = [];
+
+  for(let i=0;i<7;i++){
+    let letra = letras[(idxLetra+i)%7];
+    let alvo = (baseSemitom + intervalos[i]) % 12;
+    escala.push(notaComAlteracao(letra, alvo));
+  }
+
+  return escala;
+}
+
+function campo(tonica){
+
+  if(!tonica.includes("m")){
+    let esc = construirEscala(tonica,"maior");
+    return [
+      esc[0],
+      esc[1]+"m",
+      esc[2]+"m",
+      esc[3],
+      esc[4]+"7",
+      esc[5]+"m",
+      esc[6]+"°"
+    ];
+  }
+
+  if(menorModo==="natural"){
+    let esc = construirEscala(tonica,"menorNat");
+    return [
+      esc[0]+"m",
+      esc[1]+"°",
+      esc[2],
+      esc[3]+"m",
+      esc[4]+"m",
+      esc[5],
+      esc[6]
+    ];
+  }
+
+  let esc = construirEscala(tonica,"menorHar");
+
+  return [
+    esc[0]+"m",
+    esc[1]+"°",
+    esc[2]+"(#5)",
+    esc[3]+"m",
+    esc[4]+"7",
+    esc[5],
+    esc[6]+"°"
+  ];
+}
+
+const ciclo = ["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"];
 
 let listaAtual=[];
 let embaralhadas=[];
 let modo="quintas";
 let menorModo="natural";
 
-const ciclo = ["C","G","D","A","E","B","F#","C#","G#","D#","A#","F"];
-
-/* 🔥 limpar destaques */
-function limparAtivos(grupo){
-  grupo.forEach(id=>{
-    document.getElementById(id).classList.remove("ativo");
-  });
+function limparAtivos(ids){
+  ids.forEach(id => document.getElementById(id).classList.remove("ativo"));
 }
 
 function selecionar(tipo){
@@ -129,25 +196,20 @@ function selecionar(tipo){
   iniciar();
 }
 
-function setMenorModo(m){
-
-  limparAtivos(["btn-natural","btn-harmonica"]);
-
-  menorModo=m;
-
-  document.getElementById("btn-"+m).classList.add("ativo");
+function setModo(m){
+  limparAtivos(["btn-quintas","btn-quartas","btn-cromA","btn-cromD"]);
+  modo=m;
+  document.getElementById(
+    m==="quintas"?"btn-quintas":
+    m==="quartas"?"btn-quartas":
+    m==="cromaticoAsc"?"btn-cromA":"btn-cromD"
+  ).classList.add("ativo");
 }
 
-function setModo(m){
-
-  limparAtivos(["btn-quintas","btn-quartas","btn-cromA","btn-cromD"]);
-
-  modo=m;
-
-  if(m==="quintas") document.getElementById("btn-quintas").classList.add("ativo");
-  if(m==="quartas") document.getElementById("btn-quartas").classList.add("ativo");
-  if(m==="cromaticoAsc") document.getElementById("btn-cromA").classList.add("ativo");
-  if(m==="cromaticoDesc") document.getElementById("btn-cromD").classList.add("ativo");
+function setMenorModo(m){
+  limparAtivos(["btn-natural","btn-harmonica"]);
+  menorModo=m;
+  document.getElementById("btn-"+m).classList.add("ativo");
 }
 
 function iniciar(){
@@ -162,59 +224,28 @@ function embaralhar(a){
   }
 }
 
-function criarEscala(tonica,intervalos){
-  let base=tonica.replace("m","");
-  let idx=notas.indexOf(base);
-  return intervalos.map(i=>notas[(idx+i)%12]);
-}
-
-function campo(tonica){
-
-  if(!tonica.includes("m")){
-    let esc=criarEscala(tonica,maior);
-    return [
-      esc[0],
-      esc[1]+"m",
-      esc[2]+"m",
-      esc[3],
-      esc[4]+"7",
-      esc[5]+"m",
-      esc[6]+"°"
-    ];
-  }
-
-  if(menorModo==="natural"){
-    let esc=criarEscala(tonica,menorNat);
-    return [
-      esc[0]+"m",
-      esc[1]+"°",
-      esc[2],
-      esc[3]+"m",
-      esc[4]+"m",
-      esc[5],
-      esc[6]
-    ];
-  }
-
-  let esc=criarEscala(tonica,menorHar);
-
-  return [
-    esc[0]+"m",
-    esc[1]+"°",
-    esc[2]+"(#5)",
-    esc[3]+"m",
-    esc[4]+"7",
-    esc[5],
-    esc[6]+"°"
-  ];
-}
-
 function gerarCiclo(t){
+
+  if(modo.includes("cromatico")){
+    const crom = ["C","C#","D","D#","E","F","F#","G","G#","A","Bb","B"];
+    let base=t.replace("m","");
+    let idx=crom.indexOf(base);
+    let out=[];
+
+    for(let i=0;i<12;i++){
+      let pos = modo==="cromaticoAsc" ? (idx+i)%12 : (idx-i+12)%12;
+      let nota=crom[pos];
+      if(t.includes("m")) nota+="m";
+      out.push(nota);
+    }
+    return out;
+  }
+
   let i=listaAtual.indexOf(t);
   let out=[];
 
   for(let k=0;k<12;k++){
-    let pos=(modo==="quartas")
+    let pos = modo==="quartas"
       ? (i-k+12)%12
       : (i+k)%12;
 
@@ -238,20 +269,13 @@ function sortear(){
 
   let html="";
 
-  ciclo.forEach((ton,i)=>{
-    let ch=campo(ton);
-
-    html+=`
-      <div style="margin-bottom: 12px;">
-        <b>${ton}</b> → ${ch.join(" ")}
-      </div>
-    `;
+  ciclo.forEach(ton=>{
+    html+=`<div style="margin-bottom:12px;"><b>${ton}</b> → ${campo(ton).join(" ")}</div>`;
   });
 
   document.getElementById("ciclo").innerHTML=html;
 }
 
-/* estado inicial */
 selecionar("maior");
 setModo("quintas");
 
