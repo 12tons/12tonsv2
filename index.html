@@ -20,6 +20,20 @@ button {
   margin: 4px;
   padding: 8px 12px;
   font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #eaeaea;
+}
+
+/* 🔥 BOTÃO ATIVO */
+.ativo {
+  background: #222;
+  color: white;
 }
 
 #sortear {
@@ -38,10 +52,10 @@ button {
   margin-top: 10px;
 }
 
-/* 🔥 AQUI ESTÁ O AUMENTO */
+/* fonte grande */
 #ciclo {
   margin-top: 10px;
-  font-size: 32px;       /* dobro do tamanho */
+  font-size: 32px;
   line-height: 1.4;
   text-align: left;
   max-width: 900px;
@@ -55,20 +69,20 @@ button {
 <h1>Sorteador de Tonalidades</h1>
 
 <div>
-  <button onclick="selecionar('maior')">Maiores</button>
-  <button onclick="selecionar('menor')">Menores</button>
+  <button id="btn-maior" onclick="selecionar('maior')">Maiores</button>
+  <button id="btn-menor" onclick="selecionar('menor')">Menores</button>
 </div>
 
 <div id="submenuMenor" style="display:none;">
-  <button onclick="setMenorModo('natural')">Menor natural</button>
-  <button onclick="setMenorModo('harmonica')">Menor harmônica</button>
+  <button id="btn-natural" onclick="setMenorModo('natural')">Menor natural</button>
+  <button id="btn-harmonica" onclick="setMenorModo('harmonica')">Menor harmônica</button>
 </div>
 
 <div>
-  <button onclick="setModo('quintas')">Quintas</button>
-  <button onclick="setModo('quartas')">Quartas</button>
-  <button onclick="setModo('cromaticoAsc')">Crom ↑</button>
-  <button onclick="setModo('cromaticoDesc')">Crom ↓</button>
+  <button id="btn-quintas" onclick="setModo('quintas')">Quintas</button>
+  <button id="btn-quartas" onclick="setModo('quartas')">Quartas</button>
+  <button id="btn-cromA" onclick="setModo('cromaticoAsc')">Crom ↑</button>
+  <button id="btn-cromD" onclick="setModo('cromaticoDesc')">Crom ↓</button>
 </div>
 
 <button id="sortear" onclick="sortear()">Sortear</button>
@@ -91,19 +105,50 @@ let menorModo="natural";
 
 const ciclo = ["C","G","D","A","E","B","F#","C#","G#","D#","A#","F"];
 
+/* 🔥 limpar destaques */
+function limparAtivos(grupo){
+  grupo.forEach(id=>{
+    document.getElementById(id).classList.remove("ativo");
+  });
+}
+
 function selecionar(tipo){
+
+  limparAtivos(["btn-maior","btn-menor"]);
+
   if(tipo==="maior"){
     listaAtual=ciclo;
     document.getElementById("submenuMenor").style.display="none";
+    document.getElementById("btn-maior").classList.add("ativo");
   } else {
     listaAtual=ciclo.map(n=>n+"m");
     document.getElementById("submenuMenor").style.display="block";
+    document.getElementById("btn-menor").classList.add("ativo");
   }
+
   iniciar();
 }
 
-function setModo(m){modo=m;}
-function setMenorModo(m){menorModo=m;}
+function setMenorModo(m){
+
+  limparAtivos(["btn-natural","btn-harmonica"]);
+
+  menorModo=m;
+
+  document.getElementById("btn-"+m).classList.add("ativo");
+}
+
+function setModo(m){
+
+  limparAtivos(["btn-quintas","btn-quartas","btn-cromA","btn-cromD"]);
+
+  modo=m;
+
+  if(m==="quintas") document.getElementById("btn-quintas").classList.add("ativo");
+  if(m==="quartas") document.getElementById("btn-quartas").classList.add("ativo");
+  if(m==="cromaticoAsc") document.getElementById("btn-cromA").classList.add("ativo");
+  if(m==="cromaticoDesc") document.getElementById("btn-cromD").classList.add("ativo");
+}
 
 function iniciar(){
   embaralhadas=[...listaAtual];
@@ -206,7 +251,9 @@ function sortear(){
   document.getElementById("ciclo").innerHTML=html;
 }
 
+/* estado inicial */
 selecionar("maior");
+setModo("quintas");
 
 </script>
 
