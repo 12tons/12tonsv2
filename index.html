@@ -30,6 +30,7 @@ button {
   background: #d62828;
   color: #ffd60a;
   border: none;
+  font-size: 18px;
 }
 
 #resultado {
@@ -37,11 +38,13 @@ button {
   margin-top: 10px;
 }
 
+/* 🔥 AQUI ESTÁ O AUMENTO */
 #ciclo {
   margin-top: 10px;
-  font-size: 16px;
+  font-size: 32px;       /* dobro do tamanho */
+  line-height: 1.4;
   text-align: left;
-  max-width: 500px;
+  max-width: 900px;
   margin-inline: auto;
 }
 </style>
@@ -75,10 +78,8 @@ button {
 
 <script>
 
-// sistema cromático
 const notas = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 
-// intervalos
 const maior = [0,2,4,5,7,9,11];
 const menorNat = [0,2,3,5,7,8,10];
 const menorHar = [0,2,3,5,7,8,11];
@@ -88,7 +89,6 @@ let embaralhadas=[];
 let modo="quintas";
 let menorModo="natural";
 
-// ciclo base
 const ciclo = ["C","G","D","A","E","B","F#","C#","G#","D#","A#","F"];
 
 function selecionar(tipo){
@@ -117,33 +117,29 @@ function embaralhar(a){
   }
 }
 
-// cria escala
 function criarEscala(tonica,intervalos){
   let base=tonica.replace("m","");
   let idx=notas.indexOf(base);
   return intervalos.map(i=>notas[(idx+i)%12]);
 }
 
-// campo harmônico
 function campo(tonica){
 
   if(!tonica.includes("m")){
-    let escala=criarEscala(tonica,maior);
+    let esc=criarEscala(tonica,maior);
     return [
-      escala[0],
-      escala[1]+"m",
-      escala[2]+"m",
-      escala[3],
-      escala[4]+"7",
-      escala[5]+"m",
-      escala[6]+"°"
+      esc[0],
+      esc[1]+"m",
+      esc[2]+"m",
+      esc[3],
+      esc[4]+"7",
+      esc[5]+"m",
+      esc[6]+"°"
     ];
   }
 
-  let esc;
-
   if(menorModo==="natural"){
-    esc=criarEscala(tonica,menorNat);
+    let esc=criarEscala(tonica,menorNat);
     return [
       esc[0]+"m",
       esc[1]+"°",
@@ -155,7 +151,7 @@ function campo(tonica){
     ];
   }
 
-  esc=criarEscala(tonica,menorHar);
+  let esc=criarEscala(tonica,menorHar);
 
   return [
     esc[0]+"m",
@@ -168,18 +164,16 @@ function campo(tonica){
   ];
 }
 
-// ciclo
 function gerarCiclo(t){
-  let base=listaAtual;
-  let i=base.indexOf(t);
+  let i=listaAtual.indexOf(t);
   let out=[];
 
-  for(let k=0;k<base.length;k++){
+  for(let k=0;k<12;k++){
     let pos=(modo==="quartas")
       ? (i-k+12)%12
       : (i+k)%12;
 
-    out.push(base[pos]);
+    out.push(listaAtual[pos]);
   }
 
   return out;
@@ -201,7 +195,12 @@ function sortear(){
 
   ciclo.forEach((ton,i)=>{
     let ch=campo(ton);
-    html+=`<div><b>${ton}</b> → ${ch.join(" ")}</div>`;
+
+    html+=`
+      <div style="margin-bottom: 12px;">
+        <b>${ton}</b> → ${ch.join(" ")}
+      </div>
+    `;
   });
 
   document.getElementById("ciclo").innerHTML=html;
