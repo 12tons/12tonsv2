@@ -9,167 +9,184 @@ body {
   font-family: Arial, sans-serif;
   text-align: center;
   margin: 15px;
-  background-color: #f9f9f9;
-  color: #111;
+  background-color: #f4f6f8;
 }
 
 h1 {
-  font-size: 26px;
-  margin-bottom: 10px;
-}
-
-/* flags */
-.flags {
-  margin-bottom: 10px;
-}
-.flag {
   font-size: 24px;
-  cursor: pointer;
-  margin: 3px;
-  padding: 5px;
-  border-radius: 5px;
-}
-.flag.ativo {
-  background-color: #222;
-}
-
-/* barra */
-.barra {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 10px;
 }
 
 button {
-  font-size: 16px;
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: 2px solid #444;
-  background-color: white;
-  cursor: pointer;
+  margin: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
-button:hover {
-  background-color: #eaeaea;
+#sortear {
+  margin-top: 10px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #d62828;
+  color: #ffd60a;
+  border: none;
 }
 
-.ativo {
-  background-color: #222;
-  color: white;
-}
-
-/* resultado */
 #resultado {
-  font-size: 42px;
-  margin-top: 20px;
-  font-weight: bold;
+  font-size: 34px;
+  margin-top: 10px;
 }
 
-/* 🔥 LISTA VERTICAL */
 #ciclo {
-  margin-top: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;              /* controla espaço entre linhas */
-  font-size: 22px;       /* calibrado pra caber 12 linhas */
-  line-height: 1.2;
-}
-
-/* cada item */
-.item {
-  padding: 2px 0;
-}
-
-/* destaque da tônica */
-.tonica {
-  font-weight: bold;
-  font-size: 26px;
-}
-
-/* mobile */
-@media (max-width: 600px) {
-  #ciclo {
-    font-size: 20px;
-  }
-  .tonica {
-    font-size: 24px;
-  }
+  margin-top: 10px;
+  font-size: 16px;
+  text-align: left;
+  max-width: 500px;
+  margin-inline: auto;
 }
 </style>
 </head>
 
 <body>
 
-<div class="flags">
-  <span class="flag ativo" onclick="setLang('pt')">🇧🇷</span>
-  <span class="flag" onclick="setLang('en')">🇬🇧</span>
-  <span class="flag" onclick="setLang('es')">🇪🇸</span>
-  <span class="flag" onclick="setLang('fr')">🇫🇷</span>
-  <span class="flag" onclick="setLang('de')">🇩🇪</span>
-  <span class="flag" onclick="setLang('it')">🇮🇹</span>
+<h1>Sorteador de Tonalidades</h1>
+
+<div>
+  <button onclick="selecionar('maior')">Maiores</button>
+  <button onclick="selecionar('menor')">Menores</button>
 </div>
 
-<h1 id="titulo">Sorteador de Tonalidades</h1>
+<div id="submenuMenor" style="display:none;">
+  <button onclick="setMenorModo('natural')">Menor natural</button>
+  <button onclick="setMenorModo('harmonica')">Menor harmônica</button>
+</div>
 
-<div class="barra">
-  <button id="btn-maior" onclick="selecionar('maior')">Maiores</button>
-  <button id="btn-menor" onclick="selecionar('menor')">Menores</button>
-
-  <button id="btn-quintas" onclick="setModo('quintas')">Quintas</button>
-  <button id="btn-quartas" onclick="setModo('quartas')">Quartas</button>
-
+<div>
+  <button onclick="setModo('quintas')">Quintas</button>
+  <button onclick="setModo('quartas')">Quartas</button>
   <button onclick="setModo('cromaticoAsc')">Crom ↑</button>
   <button onclick="setModo('cromaticoDesc')">Crom ↓</button>
-
-  <button id="sortear" onclick="sortear()">Sortear</button>
 </div>
+
+<button id="sortear" onclick="sortear()">Sortear</button>
 
 <div id="resultado">—</div>
 <div id="ciclo"></div>
 
 <script>
 
-// idiomas (simplificado)
-let lang="pt";
+// sistema cromático
+const notas = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 
-// listas
-let maiores=["C","G","D","A","E","B","F♯ / G♭","D♭","A♭","E♭","B♭","F"];
-let menores=["Cm","Gm","Dm","Am","Em","Bm","F♯m","C♯m","G♯m","D♯m","A♯m","Fm"];
-let cromatico=["C","C♯ / D♭","D","D♯ / E♭","E","F","F♯ / G♭","G","G♯ / A♭","A","A♯ / B♭","B"];
+// intervalos
+const maior = [0,2,4,5,7,9,11];
+const menorNat = [0,2,3,5,7,8,10];
+const menorHar = [0,2,3,5,7,8,11];
 
 let listaAtual=[];
 let embaralhadas=[];
 let modo="quintas";
+let menorModo="natural";
 
-function embaralhar(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
-function iniciar(){embaralhadas=[...listaAtual];embaralhar(embaralhadas);}
-function selecionar(t){listaAtual=(t==="maior")?maiores:menores;iniciar();}
+// ciclo base
+const ciclo = ["C","G","D","A","E","B","F#","C#","G#","D#","A#","F"];
+
+function selecionar(tipo){
+  if(tipo==="maior"){
+    listaAtual=ciclo;
+    document.getElementById("submenuMenor").style.display="none";
+  } else {
+    listaAtual=ciclo.map(n=>n+"m");
+    document.getElementById("submenuMenor").style.display="block";
+  }
+  iniciar();
+}
+
 function setModo(m){modo=m;}
+function setMenorModo(m){menorModo=m;}
 
-function gerarCiclo(t){
-  let base=(modo.includes("cromatico"))?cromatico:listaAtual;
-  let index=base.indexOf(t.replace("m",""));
-  let ciclo=[];
+function iniciar(){
+  embaralhadas=[...listaAtual];
+  embaralhar(embaralhadas);
+}
 
-  for(let i=0;i<base.length;i++){
-    let pos;
-    if(modo==="quintas") pos=(index+i)%base.length;
-    else if(modo==="quartas") pos=(index-i+base.length)%base.length;
-    else if(modo==="cromaticoAsc") pos=(index+i)%base.length;
-    else pos=(index-i+base.length)%base.length;
+function embaralhar(a){
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+}
 
-    let nota=base[pos];
-    if(listaAtual===menores && !modo.includes("cromatico")) nota+="m";
-    ciclo.push(nota);
+// cria escala
+function criarEscala(tonica,intervalos){
+  let base=tonica.replace("m","");
+  let idx=notas.indexOf(base);
+  return intervalos.map(i=>notas[(idx+i)%12]);
+}
+
+// campo harmônico
+function campo(tonica){
+
+  if(!tonica.includes("m")){
+    let escala=criarEscala(tonica,maior);
+    return [
+      escala[0],
+      escala[1]+"m",
+      escala[2]+"m",
+      escala[3],
+      escala[4]+"7",
+      escala[5]+"m",
+      escala[6]+"°"
+    ];
   }
 
-  return ciclo;
+  let esc;
+
+  if(menorModo==="natural"){
+    esc=criarEscala(tonica,menorNat);
+    return [
+      esc[0]+"m",
+      esc[1]+"°",
+      esc[2],
+      esc[3]+"m",
+      esc[4]+"m",
+      esc[5],
+      esc[6]
+    ];
+  }
+
+  esc=criarEscala(tonica,menorHar);
+
+  return [
+    esc[0]+"m",
+    esc[1]+"°",
+    esc[2]+"(#5)",
+    esc[3]+"m",
+    esc[4]+"7",
+    esc[5],
+    esc[6]+"°"
+  ];
+}
+
+// ciclo
+function gerarCiclo(t){
+  let base=listaAtual;
+  let i=base.indexOf(t);
+  let out=[];
+
+  for(let k=0;k<base.length;k++){
+    let pos=(modo==="quartas")
+      ? (i-k+12)%12
+      : (i+k)%12;
+
+    out.push(base[pos]);
+  }
+
+  return out;
 }
 
 function sortear(){
+
   if(embaralhadas.length===0){
     document.getElementById("resultado").innerText="Fim";
     return;
@@ -181,19 +198,16 @@ function sortear(){
   let ciclo=gerarCiclo(t);
 
   let html="";
-  ciclo.forEach((n,i)=>{
-    if(i===0){
-      html+=`<div class="item tonica">${n}</div>`;
-    } else {
-      html+=`<div class="item">${n}</div>`;
-    }
+
+  ciclo.forEach((ton,i)=>{
+    let ch=campo(ton);
+    html+=`<div><b>${ton}</b> → ${ch.join(" ")}</div>`;
   });
 
   document.getElementById("ciclo").innerHTML=html;
 }
 
-listaAtual=maiores;
-iniciar();
+selecionar("maior");
 
 </script>
 
